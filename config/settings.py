@@ -93,28 +93,46 @@ SHEET_CACHE_TTL = 300  # 5 minutes
 
 
 def _fetch_channels_from_sheet(sheet_id: str) -> dict[str, ChannelConfig]:
-    """Fetch channel config from a published Google Sheet.
+    """Fetch channel config from Google Sheet.
 
-    Expected columns: Channel Name | Voice ID | Category | Discord Role ID | Prompt
-
-    Only loads channels whose name ends with '(Snap)'.
+    Expected columns: (show name) | Person | Voices ID | Sheet ID | Rate | Service | Prompt
+    The first column header may be empty — the show name is in column 0.
+    Only loads rows whose name ends with '(Snap)'.
     """
-    if sheet_id.startswith("2PACX-"):
-        url = f"https://docs.google.com/spreadsheets/d/e/{sheet_id}/pub?output=csv"
-    else:
-        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv"
     resp = httpx.get(url, timeout=15, follow_redirects=True)
     resp.raise_for_status()
 
     channels: dict[str, ChannelConfig] = {}
     last_channel_key: str | None = None
-    reader = csv.DictReader(io.StringIO(resp.text), skipinitialspace=True)
+    reader = csv.reader(io.StringIO(resp.text))
+
+    # Read header row to find column indices
+    headers = next(reader, [])
+    headers_lower = [h.strip().lower() for h in headers]
+
+    # Map column indices — first column is show name (header may be empty)
+    name_idx = 0
+    voice_idx = None
+    prompt_idx = None
+
+    for i, h in enumerate(headers_lower):
+        if h in ("voices id", "voice id"):
+            voice_idx = i
+        elif h == "prompt":
+            prompt_idx = i
+
+    if voice_idx is None:
+        logger.warning("No 'Voices ID' column found in sheet headers: %s", headers)
+        return {}
 
     for row in reader:
-        row = {k.strip(): v for k, v in row.items() if k}
+        if not row or len(row) <= voice_idx:
+            continue
 
-        name = (row.get("Channel Name") or "").strip()
-        prompt_line = (row.get("Prompt") or "").strip()
+        name = row[name_idx].strip()
+        voice_id = row[voice_idx].strip()
+        prompt_line = row[prompt_idx].strip() if prompt_idx is not None and len(row) > prompt_idx else ""
 
         if not name:
             # Continuation row — append prompt text to the previous channel
@@ -130,9 +148,7 @@ def _fetch_channels_from_sheet(sheet_id: str) -> dict[str, ChannelConfig]:
         last_channel_key = name.lower()
         channels[last_channel_key] = ChannelConfig(
             name=name,
-            elevenlabs_voice_id=(row.get("Voice ID") or "").strip(),
-            category=(row.get("Category") or "").strip(),
-            discord_role_id=(row.get("Discord Role ID") or "").strip(),
+            elevenlabs_voice_id=voice_id,
             prompt=prompt_line,
         )
 
