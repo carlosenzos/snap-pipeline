@@ -61,7 +61,7 @@ class PipelineConfig:
         self._channels = channels
 
         self.trigger_label: str = "snap script"
-        self.ready_list: str = "video in edit"
+        self.ready_list: str = "Videos in Edit"
 
         self.label_writing: str = "Snap: Writing Script"
         self.label_review: str = "Snap: Script Ready"
