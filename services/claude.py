@@ -89,8 +89,7 @@ async def write_script(
                 model="claude-opus-4-6",
                 max_tokens=40000,
                 thinking={
-                    "type": "enabled",
-                    "budget_tokens": 16000,
+                    "type": "adaptive",
                 },
                 tools=[{
                     "type": "web_search_20250305",
@@ -218,8 +217,7 @@ async def revise_script(
                 model="claude-sonnet-4-5-20250929",
                 max_tokens=40000,
                 thinking={
-                    "type": "enabled",
-                    "budget_tokens": 10000,
+                    "type": "adaptive",
                 },
                 system=full_system,
                 messages=[{
