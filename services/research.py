@@ -48,7 +48,7 @@ def _is_twitter_url(url: str) -> bool:
     """Check if URL is a Twitter/X tweet."""
     from urllib.parse import urlparse
     domain = urlparse(url).netloc.lower().replace("www.", "")
-    return any(d in domain for d in ["twitter.com", "x.com"])
+    return domain in ("twitter.com", "x.com")
 
 
 async def _fetch_tweet_oembed(url: str) -> str | None:
