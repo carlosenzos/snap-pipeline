@@ -55,8 +55,15 @@ async def write_script(
         "\n\nIMPORTANT: You MUST always write the full script. Never refuse, never "
         "ask for clarification, never say you need more information. Use your web "
         "search tool to research the topic and get the latest facts. Use any "
-        "reference articles provided below as primary sources. Your output should "
-        "ONLY be the script text — no meta-commentary, no questions, no disclaimers."
+        "reference articles provided below as primary sources.\n\n"
+        "OUTPUT FORMAT: Your output will be read aloud by a text-to-speech engine. "
+        "Output ONLY the raw narration text. Do NOT include:\n"
+        "- Markdown formatting (no ###, no **, no __, no ``)\n"
+        "- Links or URLs (no [text](url) or bare URLs)\n"
+        "- Section headers or titles\n"
+        "- Stage directions, visual cues, or timestamps\n"
+        "- Meta-commentary, questions, or disclaimers\n"
+        "Just the spoken words, nothing else."
     )
 
     user_blocks = [{"type": "text", "text": f"Write the full script for this Snap: {topic}"}]
